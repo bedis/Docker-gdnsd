@@ -1,0 +1,88 @@
+From 28b06f9fd2587b2de728ab3e5c7834be73fafca8 Mon Sep 17 00:00:00 2001
+From: Baptiste Assmann <bedis9@gmail.com>
+Date: Thu, 9 Jun 2016 12:57:15 +0200
+Subject: [PATCH] WIP: stats page URL change
+
+---
+ src/statio.c        | 16 ++++++++--------
+ t/004misc/018misc.t |  2 +-
+ t/_GDT.pm           |  2 +-
+ 3 files changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/src/statio.c b/src/statio.c
+index c9140c5..686149e 100644
+--- a/src/statio.c
++++ b/src/statio.c
+@@ -69,7 +69,7 @@ typedef enum {
+ } http_state_t;
+ 
+ // How many bytes of the request we really read()
+-#define HTTP_READ_BYTES 18
++#define HTTP_READ_BYTES 32
+ 
+ typedef struct {
+     dmn_anysin_t* asin;
+@@ -191,8 +191,8 @@ static const char html_fixed[] =
+     "</table>\r\n";
+ 
+ static const char html_footer[] =
+-    "<p>For machine-readable CSV output, use <a href='/csv'>/csv</a></p>\r\n"
+-    "<p>For machine-readable JSON output, use <a href='/json'>/json</a></p>\r\n"
++    "<p>For machine-readable CSV output, use <a href='/stats/gdnsd/csv'>/stats/gdnsd/csv</a></p>\r\n"
++    "<p>For machine-readable JSON output, use <a href='/stats/gdnsd/json'>/stats/gdnsd/json</a></p>\r\n"
+     "<p>For delta stats (since last such query), append the query param '?f=1'</p>\r\n"
+     "</body></html>\r\n";
+ 
+@@ -429,10 +429,10 @@ static struct {
+ = {
+     // if one match is another's leading substring, the longer
+     //   one must come first in the list!
+-    { "GET /json",     statio_fill_outbuf_json },
+-    { "GET /csv",      statio_fill_outbuf_csv  },
+-    { "GET /html",     statio_fill_outbuf_html },
+-    { "GET /",         statio_fill_outbuf_html },
++    { "GET /stats/gdnsd/json",     statio_fill_outbuf_json },
++    { "GET /stats/gdnsd/csv",      statio_fill_outbuf_csv  },
++    { "GET /stats/gdnsd/html",     statio_fill_outbuf_html },
++    { "GET /stats/gdnsd/",         statio_fill_outbuf_html },
+ };
+ 
+ static const unsigned n_http_lookup = ARRAY_SIZE(http_lookup);
+@@ -451,7 +451,7 @@ static void process_http_query(char* inbuffer, struct iovec* outbufs) {
+         dmn_assert(msize + 5 <= HTTP_READ_BYTES); // match + "/?f=1"
+         if(!memcmp(inbuffer, http_lookup[i].match, msize)) {
+             const char* trailptr = &inbuffer[msize];
+-            // allow for trailing slash, e.g. "GET /csv/ HTTP/1.0"
++            // allow for trailing slash, e.g. "GET /stats/gdnsd/csv HTTP/1.0"
+             if(*trailptr == '/')
+                 trailptr++;
+             // require termination of the name with space, query, or frag
+diff --git a/t/004misc/018misc.t b/t/004misc/018misc.t
+index 49f8a5a..24d725c 100644
+--- a/t/004misc/018misc.t
++++ b/t/004misc/018misc.t
+@@ -978,7 +978,7 @@ sub get_json_flushed_stats {
+         max_size => 10240,
+         timeout => 3,
+     );
+-    my $response = $_useragent->get("http://127.0.0.1:${_GDT::HTTP_PORT}/json?f=1");
++    my $response = $_useragent->get("http://127.0.0.1:${_GDT::HTTP_PORT}/stats/gdnsd/json?f=1");
+     if(!$response) {
+         die "JSON stats fetch: No response...";
+     }
+diff --git a/t/_GDT.pm b/t/_GDT.pm
+index d79a344..1c3be9e 100644
+--- a/t/_GDT.pm
++++ b/t/_GDT.pm
+@@ -229,7 +229,7 @@ sub _get_daemon_csv_stats {
+         max_size => 10240,
+         timeout => 3,
+     );
+-    my $response = $_useragent->get("http://127.0.0.1:${HTTP_PORT}/csv");
++    my $response = $_useragent->get("http://127.0.0.1:${HTTP_PORT}/stats/gdnsd/csv");
+     if(!$response) {
+         return "No response...";
+     }
+-- 
+2.8.0
+

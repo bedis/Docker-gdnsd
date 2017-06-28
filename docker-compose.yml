@@ -1,0 +1,15 @@
+version: "3"
+
+services:
+  gdnsd:
+    image: gdnsd
+    hostname: gdnsd
+    container_name: gdnsd
+    restart: always
+    network_mode: "bridge"
+    volumes:
+      - ./conf/:/etc/gdnsd/
+    build:
+      context: .
+      args:
+        GDNS_VER: 2.2.4

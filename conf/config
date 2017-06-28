@@ -1,0 +1,34 @@
+options => {
+ dns_port => 53
+ http_port => 3506
+ log_stats => 86400
+ tcp_timeout => 15
+ include_optional_ns => true
+ listen => [ 0.0.0.0 ]
+}
+
+service_types => {
+ www.example.local => {
+  plugin = http_status
+  vhost = "www.example.local"
+  url_path = "/checkme"
+  port = 80
+  interval = 10
+  timeout = 6
+  ok_codes = [ 200, 301, 302 ]
+  up_thresh = 3   #10 good checks in a row to go from DOWN to UP
+  ok_thresh = 3    #5 good checks in a row to go from DANGER to UP
+  down_thresh = 3  #2 fails moved server from DANGER to DOWN
+ }
+}
+
+plugins => {
+ # simple failover: use primary first, then secondary
+ simplefo => {
+  www.example.local => {
+   service_types => [ www.example.local ],
+   primary => 10.0.0.3
+   secondary => 10.0.0.4
+  }
+ }
+}
