@@ -33,4 +33,12 @@ Or use docker-compose:
 
   `docker-compose up`
 
+# Pull the image from Docker cloud
 
+Each time this repository is updated, Docker Cloud is configured to automatically build it and push it into docker registry.
+Then it is possible to pull this image directly from there:
+
+  `docker pull bedis9/gdnsd:latest`
+  `docker tag bedis9/gdnsd:latest gdnsd:latest`
+
+Link to the Docker repo: [https://hub.docker.com/r/bedis9/gdnsd/](https://hub.docker.com/r/bedis9/gdnsd/)
