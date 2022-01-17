@@ -5,7 +5,7 @@ gdnsd is an Authoritative-only DNS server which does geographic (or other sorts 
 
 # Building the container
 
-Clone this repository, go into the directory and run a command like: `docker build --tag gdnsd --build-arg GDNS_VER=2.2.4 .`
+Clone this repository, go into the directory and run a command like: `docker build --tag gdnsd --build-arg GDNS_VER=3.8.0 .`
 
 It is mandatory to precise a version number for gdns through the argument **GDNS_VER**.
 

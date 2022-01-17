@@ -1,28 +1,41 @@
-# docker build --tag gdnsd --build-arg GDNS_VER=2.2.4 .
+# docker build --tag gdnsd --build-arg GDNS_VER=3.8.0 .
 
-FROM alpine:3.6
+FROM alpine:latest AS build
 MAINTAINER Baptiste Assmann <bedis9@gmail.com>
 
 ARG GDNS_VER=
 
-ENV GDNS_OPT="--prefix=/ --datarootdir=/usr"  GDNS_BUILD_DEPENDENCY="libev perl perl-libwww ragel libev libev-dev"
-ENV DEL_PKGS="libev-dev gcc g++ patch file openssl" RM_DIRS="/usr/src/* /var/cache/apk/*" 
-
-ADD 0001-WIP-stats-page-URL-change.patch /usr/src/gdnsd-${GDNS_VER}/
+ENV GDNS_OPT="--prefix=/ --datarootdir=/usr"
+ENV GDNS_BUILD_DEPENDENCY="perl perl-libwww ragel libev-dev autoconf automake libtool userspace-rcu-dev libcap-dev libmaxminddb-dev perl-test-harness perl-test-harness-utils libsodium-dev"
 
 RUN apk update \
 && apk add gcc g++ make patch file openssl ${GDNS_BUILD_DEPENDENCY} \
 && addgroup -S -g 101 gdnsd \
 && adduser -S -H -D -u 100 -s /sbin/nologin gdnsd gdnsd \
+&& mkdir /usr/src \
 && cd /usr/src \
 && wget https://github.com/gdnsd/gdnsd/releases/download/v${GDNS_VER}/gdnsd-${GDNS_VER}.tar.xz \
 && tar xJf gdnsd-${GDNS_VER}.tar.xz \
 && cd gdnsd-${GDNS_VER} \
-&& patch -p 1 <0001-WIP-stats-page-URL-change.patch \
+&& autoreconf -vif \
 && ./configure ${GDNS_OPT} \
 && make \
-&& make install \
-&& apk del ${DEL_PKGS} \
-&& rm -rf ${RM_DIRS}
+&& make install
+
+RUN find / -name gdnsd \
+&& ls -l /var/lib
+
+FROM alpine:latest
+
+RUN apk --no-cache add libev libsodium libmaxminddb userspace-rcu libcap
+
+COPY --from=build /etc/gdnsd      /etc/gdnsd
+COPY --from=build /libexec/gdnsd  /libexec/gdnsd
+COPY --from=build /usr/doc/gdnsd  /usr/doc/gdsnd
+COPY --from=build /var/lib/gdnsd  /var/lib/gdnsd
+COPY --from=build /sbin/gdnsd     /sbin/gdnsd
+COPY --from=build /run/gdnsd      /run/gdnsd
+
+RUN find / -name gdnsd
 
 ENTRYPOINT [ "/sbin/gdnsd", "-f", "start" ]
